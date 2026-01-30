@@ -1,0 +1,17 @@
+{
+  "name": "clawdbot-dashboard",
+  "version": "1.0.0",
+  "description": "可视化管理面板 for Clawdbot",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "start": "cd backend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "author": "Tony Ye",
+  "license": "MIT"
+}

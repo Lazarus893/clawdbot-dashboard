@@ -3,14 +3,15 @@ import { useState, useEffect } from 'react';
 const API_BASE = 'http://localhost:3001/api';
 
 export interface Session {
-  sessionKey: string;
-  agentId: string;
+  key: string;
   kind: string;
-  createdAtMs: number;
-  lastMessageAtMs: number;
-  messageCount: number;
+  updatedAt: number;
+  ageMs: number;
+  sessionId: string;
   model?: string;
-  status?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
 }
 
 export interface CronJob {

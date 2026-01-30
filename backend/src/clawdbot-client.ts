@@ -6,14 +6,15 @@ const execAsync = promisify(exec);
 const CLAWDBOT_BIN = '/Users/tonyye/.npm-global/bin/clawdbot';
 
 export interface Session {
-  sessionKey: string;
-  agentId: string;
+  key: string;
   kind: string;
-  createdAtMs: number;
-  lastMessageAtMs: number;
-  messageCount: number;
+  updatedAt: number;
+  ageMs: number;
+  sessionId: string;
   model?: string;
-  status?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
 }
 
 export interface CronJob {
@@ -48,14 +49,40 @@ export interface SystemStatus {
   };
 }
 
+function extractJSON(output: string): any {
+  // Find the first { and extract JSON from there
+  const jsonStart = output.indexOf('{');
+  if (jsonStart === -1) return null;
+  
+  try {
+    return JSON.parse(output.substring(jsonStart));
+  } catch (error) {
+    console.error('Failed to parse JSON:', error);
+    return null;
+  }
+}
+
 export class ClawdbotClient {
   async listSessions(): Promise<Session[]> {
     try {
       const { stdout } = await execAsync(
-        `${CLAWDBOT_BIN} sessions list --json`
+        `${CLAWDBOT_BIN} sessions list --json 2>/dev/null`
       );
-      const result = JSON.parse(stdout);
-      return result.sessions || [];
+      const result = extractJSON(stdout);
+      if (!result || !result.sessions) return [];
+      
+      // Transform to simpler format
+      return result.sessions.map((s: any) => ({
+        key: s.key,
+        kind: s.kind,
+        updatedAt: s.updatedAt,
+        ageMs: s.ageMs,
+        sessionId: s.sessionId,
+        model: s.model,
+        inputTokens: s.inputTokens,
+        outputTokens: s.outputTokens,
+        totalTokens: s.totalTokens
+      }));
     } catch (error) {
       console.error('Failed to list sessions:', error);
       return [];
@@ -64,9 +91,11 @@ export class ClawdbotClient {
 
   async listCronJobs(): Promise<CronJob[]> {
     try {
-      const { stdout } = await execAsync(`${CLAWDBOT_BIN} cron list --json`);
-      const result = JSON.parse(stdout);
-      return result.jobs || [];
+      const { stdout } = await execAsync(
+        `${CLAWDBOT_BIN} cron list --json 2>/dev/null`
+      );
+      const result = extractJSON(stdout);
+      return result?.jobs || [];
     } catch (error) {
       console.error('Failed to list cron jobs:', error);
       return [];
@@ -75,9 +104,9 @@ export class ClawdbotClient {
 
   async updateCronJob(jobId: string, patch: any): Promise<boolean> {
     try {
-      const patchJson = JSON.stringify(patch);
+      const patchJson = JSON.stringify(patch).replace(/"/g, '\\"');
       await execAsync(
-        `${CLAWDBOT_BIN} cron update ${jobId} '${patchJson}'`
+        `${CLAWDBOT_BIN} cron update ${jobId} "${patchJson}" 2>/dev/null`
       );
       return true;
     } catch (error) {
@@ -88,7 +117,7 @@ export class ClawdbotClient {
 
   async runCronJob(jobId: string): Promise<boolean> {
     try {
-      await execAsync(`${CLAWDBOT_BIN} cron run ${jobId}`);
+      await execAsync(`${CLAWDBOT_BIN} cron run ${jobId} 2>/dev/null`);
       return true;
     } catch (error) {
       console.error('Failed to run cron job:', error);

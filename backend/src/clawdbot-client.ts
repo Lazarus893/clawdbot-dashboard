@@ -6,8 +6,8 @@ import { homedir } from 'os';
 
 const execAsync = promisify(exec);
 
-// Use environment variable or find in PATH
-const CLAWDBOT_BIN = process.env.CLAWDBOT_BIN || 'clawdbot';
+// Use environment variable or default to global install path
+const CLAWDBOT_BIN = process.env.CLAWDBOT_BIN || '/Users/tonyye/.npm-global/bin/clawdbot';
 const CLAWDBOT_CONFIG_DIR = process.env.CLAWDBOT_CONFIG_DIR || join(homedir(), '.clawdbot');
 
 export interface Session {

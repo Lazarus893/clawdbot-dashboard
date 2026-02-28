@@ -1,4 +1,4 @@
-import { useAgentsOverview } from '../hooks/useClawdbotAPI';
+import { useAgentsOverview } from '../hooks/useOpenClawAPI';
 
 // Agent color mapping
 const agentColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {

@@ -1,4 +1,4 @@
-# Clawdbot Dashboard 使用说明
+# OpenClaw Dashboard 使用说明
 
 ## 🚀 快速开始
 
@@ -147,16 +147,16 @@ curl http://localhost:3001/health
 
 ### API 返回空数据
 
-检查 Clawdbot Gateway 是否运行：
+检查 OpenClaw Gateway 是否运行：
 ```bash
-clawdbot status
+openclaw gateway status
 ```
 
 ### Sessions 数据格式错误
 
-确保使用最新版本的 Clawdbot CLI：
+确保使用最新版本的 OpenClaw CLI：
 ```bash
-clawdbot --version
+openclaw --version
 ```
 
 ## 📦 部署
@@ -175,10 +175,13 @@ npm start
 
 ## 🔗 链接
 
-- **GitHub**: https://github.com/Lazarus893/clawdbot-dashboard
-- **Clawdbot 文档**: https://docs.clawd.bot
+- **OpenClaw 文档**: https://openclaw.dev
 
 ## 📝 更新日志
+
+### v1.1.0 (2026-02-02)
+- 🔄 更新为适配 OpenClaw（从 clawdbot 重命名）
+- 📦 更新所有依赖到最新版本
 
 ### v1.0.0 (2026-01-30)
 - ✨ 初始版本发布

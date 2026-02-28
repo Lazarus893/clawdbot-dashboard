@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { clawdbotClient } from '../clawdbot-client.js';
+import { openclawClient } from '../openclaw-client.js';
 
 export const agentsRouter = Router();
 
 agentsRouter.get('/overview', async (req, res) => {
   try {
-    const overview = await clawdbotClient.getAgentsOverview();
+    const overview = await openclawClient.getAgentsOverview();
     res.json(overview);
   } catch (error) {
     console.error('Failed to get agents overview:', error);

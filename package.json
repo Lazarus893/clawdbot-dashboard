@@ -1,7 +1,7 @@
 {
-  "name": "clawdbot-dashboard",
-  "version": "1.0.0",
-  "description": "可视化管理面板 for Clawdbot",
+  "name": "openclaw-dashboard",
+  "version": "1.1.0",
+  "description": "可视化管理面板 for OpenClaw",
   "private": true,
   "scripts": {
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",

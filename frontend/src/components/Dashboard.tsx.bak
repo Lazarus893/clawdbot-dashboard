@@ -1,4 +1,4 @@
-import { useSessions } from '../hooks/useOpenClawAPI';
+import { useSessions } from '../hooks/useClawdbotAPI';
 
 function formatTimeAgo(ms: number): string {
   const seconds = Math.floor(ms / 1000);

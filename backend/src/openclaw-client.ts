@@ -7,8 +7,8 @@ import { homedir } from 'os';
 const execAsync = promisify(exec);
 
 // Use environment variable or default to global install path
-const CLAWDBOT_BIN = process.env.CLAWDBOT_BIN || '/Users/tonyye/.npm-global/bin/clawdbot';
-const CLAWDBOT_CONFIG_DIR = process.env.CLAWDBOT_CONFIG_DIR || join(homedir(), '.clawdbot');
+const OPENCLAW_BIN = process.env.OPENCLAW_BIN || 'openclaw';
+const OPENCLAW_CONFIG_DIR = process.env.OPENCLAW_CONFIG_DIR || join(homedir(), '.openclaw');
 
 export interface Session {
   key: string;
@@ -91,11 +91,11 @@ function extractJSON(output: string): any {
   }
 }
 
-export class ClawdbotClient {
+export class OpenClawClient {
   async listSessions(): Promise<Session[]> {
     try {
       const { stdout } = await execAsync(
-        `${CLAWDBOT_BIN} sessions list --json 2>/dev/null`
+        `${OPENCLAW_BIN} sessions list --json 2>/dev/null`
       );
       const result = extractJSON(stdout);
       if (!result || !result.sessions) return [];
@@ -121,7 +121,7 @@ export class ClawdbotClient {
   async listCronJobs(): Promise<CronJob[]> {
     try {
       const { stdout } = await execAsync(
-        `${CLAWDBOT_BIN} cron list --json 2>/dev/null`
+        `${OPENCLAW_BIN} cron list --json 2>/dev/null`
       );
       const result = extractJSON(stdout);
       return result?.jobs || [];
@@ -135,7 +135,7 @@ export class ClawdbotClient {
     try {
       const patchJson = JSON.stringify(patch).replace(/"/g, '\\"');
       await execAsync(
-        `${CLAWDBOT_BIN} cron update ${jobId} "${patchJson}" 2>/dev/null`
+        `${OPENCLAW_BIN} cron update ${jobId} "${patchJson}" 2>/dev/null`
       );
       return true;
     } catch (error) {
@@ -146,7 +146,7 @@ export class ClawdbotClient {
 
   async runCronJob(jobId: string): Promise<boolean> {
     try {
-      await execAsync(`${CLAWDBOT_BIN} cron run ${jobId} 2>/dev/null`);
+      await execAsync(`${OPENCLAW_BIN} cron run ${jobId} 2>/dev/null`);
       return true;
     } catch (error) {
       console.error('Failed to run cron job:', error);
@@ -156,8 +156,8 @@ export class ClawdbotClient {
 
   async getSystemStatus(): Promise<SystemStatus> {
     try {
-      // Try using clawdbot gateway status first
-      const { stdout } = await execAsync(`${CLAWDBOT_BIN} gateway status --json 2>/dev/null`, { timeout: 5000 });
+      // Try using openclaw gateway status first
+      const { stdout } = await execAsync(`${OPENCLAW_BIN} gateway status --json 2>/dev/null`, { timeout: 5000 });
       const result = extractJSON(stdout);
       if (result) {
         return {
@@ -173,7 +173,7 @@ export class ClawdbotClient {
     }
     
     try {
-      const { stdout } = await execAsync(`ps aux | grep clawdbot-gateway | grep -v grep`);
+      const { stdout } = await execAsync(`ps aux | grep openclaw-gateway | grep -v grep`);
       const lines = stdout.trim().split('\n');
       
       if (lines.length > 0 && lines[0]) {
@@ -199,8 +199,8 @@ export class ClawdbotClient {
 
   async getAgentsOverview(): Promise<AgentsOverview> {
     try {
-      // Read clawdbot.json config directly
-      const configPath = join(CLAWDBOT_CONFIG_DIR, 'clawdbot.json');
+      // Read openclaw.json config directly
+      const configPath = join(OPENCLAW_CONFIG_DIR, 'openclaw.json');
       const configContent = await readFile(configPath, 'utf-8');
       const config = JSON.parse(configContent);
       
@@ -250,4 +250,4 @@ export class ClawdbotClient {
   }
 }
 
-export const clawdbotClient = new ClawdbotClient();
+export const openclawClient = new OpenClawClient();

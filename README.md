@@ -1,6 +1,6 @@
-# Clawdbot Dashboard
+# OpenClaw Dashboard
 
-> 可视化管理面板 for Clawdbot - 监控任务、Cron Jobs 和 Sub-Agents
+> 可视化管理面板 for OpenClaw - 监控任务、Cron Jobs 和 Sub-Agents
 
 ## 功能特性
 
@@ -11,14 +11,14 @@
 ## 技术栈
 
 **前端**:
-- React 18 + TypeScript
-- Vite
-- Tailwind CSS
+- React 19 + TypeScript
+- Vite 7
+- Tailwind CSS 4
 
 **后端**:
 - Node.js + Express
 - TypeScript
-- 直接调用 Clawdbot CLI
+- 直接调用 OpenClaw CLI
 
 ## 快速开始
 
@@ -36,16 +36,16 @@ npm run dev
 
 这会同时启动：
 - 后端 API: http://localhost:3001
-- 前端界面: http://localhost:3000
+- 前端界面: http://localhost:5173
 
 ### 3. 访问面板
 
-打开浏览器访问 http://localhost:3000
+打开浏览器访问 http://localhost:5173
 
 ## 项目结构
 
 ```
-clawdbot-dashboard/
+openclaw-dashboard/
 ├── frontend/          # React 前端
 │   ├── src/
 │   │   ├── components/   # UI 组件
@@ -56,7 +56,7 @@ clawdbot-dashboard/
 │   ├── src/
 │   │   ├── routes/       # API 路由
 │   │   ├── server.ts
-│   │   └── clawdbot-client.ts
+│   │   └── openclaw-client.ts
 │   └── package.json
 └── package.json       # Root
 ```
@@ -76,6 +76,13 @@ clawdbot-dashboard/
 ### System
 
 - `GET /api/system/status` - 获取系统状态
+
+## 环境变量
+
+后端支持以下环境变量：
+
+- `OPENCLAW_BIN`: OpenClaw CLI 路径（默认: `openclaw`）
+- `OPENCLAW_CONFIG_DIR`: 配置目录（默认: `~/.openclaw`）
 
 ## 开发
 

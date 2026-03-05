@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir, cpus, totalmem, freemem, loadavg } from 'os';
 
 const execAsync = promisify(exec);
 
@@ -41,17 +41,22 @@ export interface CronJob {
   payload?: any;
 }
 
+export interface ResourceMetrics {
+  cpuPercent: number;
+  memoryPercent: number;
+  memoryUsedMB: number;
+  memoryTotalMB: number;
+  loadAvg: number[];
+  cpuCores: number;
+}
+
 export interface SystemStatus {
   gateway: {
     running: boolean;
     pid?: number;
     uptime?: string;
   };
-  memory?: {
-    rss: number;
-    heapUsed: number;
-    heapTotal: number;
-  };
+  resources: ResourceMetrics;
 }
 
 export interface AgentBinding {
@@ -95,12 +100,12 @@ export class OpenClawClient {
   async listSessions(): Promise<Session[]> {
     try {
       const { stdout } = await execAsync(
-        `${OPENCLAW_BIN} sessions list --json 2>/dev/null`
+        `${OPENCLAW_BIN} sessions --json --all-agents`,
+        { timeout: 15000 }
       );
       const result = extractJSON(stdout);
       if (!result || !result.sessions) return [];
       
-      // Transform to simpler format
       return result.sessions.map((s: any) => ({
         key: s.key,
         kind: s.kind,
@@ -110,7 +115,10 @@ export class OpenClawClient {
         model: s.model,
         inputTokens: s.inputTokens,
         outputTokens: s.outputTokens,
-        totalTokens: s.totalTokens
+        totalTokens: s.totalTokens,
+        agentId: s.agentId,
+        modelProvider: s.modelProvider,
+        contextTokens: s.contextTokens,
       }));
     } catch (error) {
       console.error('Failed to list sessions:', error);
@@ -121,7 +129,8 @@ export class OpenClawClient {
   async listCronJobs(): Promise<CronJob[]> {
     try {
       const { stdout } = await execAsync(
-        `${OPENCLAW_BIN} cron list --json 2>/dev/null`
+        `${OPENCLAW_BIN} cron list --json --all`,
+        { timeout: 30000 }
       );
       const result = extractJSON(stdout);
       return result?.jobs || [];
@@ -133,10 +142,11 @@ export class OpenClawClient {
 
   async updateCronJob(jobId: string, patch: any): Promise<boolean> {
     try {
-      const patchJson = JSON.stringify(patch).replace(/"/g, '\\"');
-      await execAsync(
-        `${OPENCLAW_BIN} cron update ${jobId} "${patchJson}" 2>/dev/null`
-      );
+      const safeId = jobId.replace(/[^a-zA-Z0-9_\-]/g, '');
+      const cmd = patch.enabled
+        ? `${OPENCLAW_BIN} cron enable "${safeId}"`
+        : `${OPENCLAW_BIN} cron disable "${safeId}"`;
+      await execAsync(cmd, { timeout: 30000 });
       return true;
     } catch (error) {
       console.error('Failed to update cron job:', error);
@@ -146,7 +156,8 @@ export class OpenClawClient {
 
   async runCronJob(jobId: string): Promise<boolean> {
     try {
-      await execAsync(`${OPENCLAW_BIN} cron run ${jobId} 2>/dev/null`);
+      const safeId = jobId.replace(/[^a-zA-Z0-9_\-]/g, '');
+      await execAsync(`${OPENCLAW_BIN} cron run "${safeId}"`, { timeout: 30000 });
       return true;
     } catch (error) {
       console.error('Failed to run cron job:', error);
@@ -154,47 +165,120 @@ export class OpenClawClient {
     }
   }
 
+  private getResourceMetrics(): ResourceMetrics {
+    const totalMem = totalmem();
+    const freeMem = freemem();
+    const usedMem = totalMem - freeMem;
+
+    const cpuList = cpus();
+    const cpuCount = cpuList.length;
+
+    const load = loadavg();
+    const cpuPercent = Math.min(100, Math.round((load[0] / cpuCount) * 100));
+
+    return {
+      cpuPercent,
+      memoryPercent: Math.round((usedMem / totalMem) * 100),
+      memoryUsedMB: Math.round(usedMem / 1024 / 1024),
+      memoryTotalMB: Math.round(totalMem / 1024 / 1024),
+      loadAvg: load.map(v => Math.round(v * 100) / 100),
+      cpuCores: cpuCount,
+    };
+  }
+
   async getSystemStatus(): Promise<SystemStatus> {
+    const resources = this.getResourceMetrics();
+
     try {
-      // Try using openclaw gateway status first
-      const { stdout } = await execAsync(`${OPENCLAW_BIN} gateway status --json 2>/dev/null`, { timeout: 5000 });
+      const { stdout } = await execAsync(
+        `${OPENCLAW_BIN} gateway status --json`,
+        { timeout: 15000 }
+      );
       const result = extractJSON(stdout);
       if (result) {
+        // Parse the real CLI output structure:
+        // result.port.listeners[] has pid/command info
+        // result.port.status === 'busy' means gateway is running
+        const portInfo = result.port;
+        const isRunning = portInfo?.status === 'busy' && portInfo?.listeners?.length > 0;
+        const listener = portInfo?.listeners?.[0];
+
         return {
           gateway: {
-            running: result.running ?? true,
-            pid: result.pid,
-            uptime: result.uptime
-          }
+            running: isRunning,
+            pid: listener?.pid,
+            uptime: result.gateway?.port ? `port ${result.gateway.port}` : undefined,
+          },
+          resources,
         };
       }
     } catch {
-      // Fallback to ps
+      // CLI timed out or not available
     }
-    
-    try {
-      const { stdout } = await execAsync(`ps aux | grep openclaw-gateway | grep -v grep`);
-      const lines = stdout.trim().split('\n');
-      
-      if (lines.length > 0 && lines[0]) {
-        const parts = lines[0].split(/\s+/);
-        return {
-          gateway: {
-            running: true,
-            pid: parseInt(parts[1]) || undefined,
-            uptime: parts[9] || undefined
-          }
-        };
-      }
-    } catch {
-      // Gateway not running
-    }
-    
+
     return {
-      gateway: {
-        running: false
-      }
+      gateway: { running: false },
+      resources,
     };
+  }
+
+  async getSessionMessages(_sessionKey: string): Promise<any[]> {
+    // The openclaw CLI does not expose a session message history command.
+    // Session messages are stored internally and not accessible via CLI.
+    return [];
+  }
+
+  async listModels(): Promise<any> {
+    try {
+      const { stdout } = await execAsync(
+        `${OPENCLAW_BIN} models list --json`,
+        { timeout: 120000 }
+      );
+      return extractJSON(stdout);
+    } catch (error) {
+      console.error('Failed to list models:', error);
+      return { models: [] };
+    }
+  }
+
+  async getModelStatus(): Promise<any> {
+    try {
+      const { stdout } = await execAsync(
+        `${OPENCLAW_BIN} models status --json`,
+        { timeout: 120000 }
+      );
+      return extractJSON(stdout);
+    } catch (error) {
+      console.error('Failed to get model status:', error);
+      return null;
+    }
+  }
+
+  async setModel(modelKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const safe = modelKey.replace(/[^a-zA-Z0-9_/.\-]/g, '');
+      await execAsync(
+        `${OPENCLAW_BIN} models set "${safe}"`,
+        { timeout: 30000 }
+      );
+      return { success: true };
+    } catch (error: any) {
+      console.error('Failed to set model:', error);
+      return { success: false, error: error?.message || 'Unknown error' };
+    }
+  }
+
+  async restartGateway(): Promise<{ success: boolean; error?: string }> {
+    try {
+      await execAsync(
+        `${OPENCLAW_BIN} gateway restart`,
+        { timeout: 30000 }
+      );
+      return { success: true };
+    } catch (error: any) {
+      console.error('Failed to restart gateway:', error);
+      return { success: false, error: error?.message || 'Unknown error' };
+    }
   }
 
   async getAgentsOverview(): Promise<AgentsOverview> {
@@ -251,3 +335,53 @@ export class OpenClawClient {
 }
 
 export const openclawClient = new OpenClawClient();
+
+// --- Claude Code Provider Switcher (ccps) ---
+
+const CCPS_BIN = process.env.CCPS_BIN || `${homedir()}/.local/bin/ccps`;
+const CCPS_DB = process.env.CC_SWITCH_DB || join(homedir(), '.cc-switch', 'cc-switch.db');
+
+export interface CcProvider {
+  id: string;
+  name: string;
+  isCurrent: boolean;
+  baseUrl: string;
+}
+
+export class CcpsClient {
+  async listProviders(): Promise<CcProvider[]> {
+    try {
+      const { stdout } = await execAsync(
+        `sqlite3 -json "${CCPS_DB}" "SELECT id, name, is_current, COALESCE(json_extract(settings_config,'$.env.ANTHROPIC_BASE_URL'), '') as base_url FROM providers WHERE app_type='claude' ORDER BY name"`,
+        { timeout: 10000 }
+      );
+      const rows = JSON.parse(stdout.trim());
+      return rows.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        isCurrent: r.is_current === 1,
+        baseUrl: r.base_url,
+      }));
+    } catch (error) {
+      console.error('Failed to list ccps providers:', error);
+      return [];
+    }
+  }
+
+  async useProvider(nameOrId: string): Promise<{ success: boolean; name?: string; error?: string }> {
+    try {
+      const safe = nameOrId.replace(/"/g, '\\"');
+      const { stdout } = await execAsync(
+        `bash "${CCPS_BIN}" use "${safe}"`,
+        { timeout: 120000 }
+      );
+      const match = stdout.match(/Switched to:\s*(.+?)\s*\(/);
+      return { success: true, name: match?.[1] || nameOrId };
+    } catch (error: any) {
+      console.error('Failed to switch ccps provider:', error);
+      return { success: false, error: error?.stderr || error?.message || 'Unknown error' };
+    }
+  }
+}
+
+export const ccpsClient = new CcpsClient();

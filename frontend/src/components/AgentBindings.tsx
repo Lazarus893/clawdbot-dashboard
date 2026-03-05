@@ -1,100 +1,97 @@
 import { useAgentsOverview } from '../hooks/useOpenClawAPI';
+import { motion } from 'framer-motion';
+import {
+  Robot,
+  Hash,
+  Cpu,
+  Users,
+  Link,
+  ArrowsClockwise,
+  Brain,
+  ArrowsCounterClockwise,
+} from '@phosphor-icons/react';
+import { ClaudeCodeSwitcher } from './ClaudeCodeSwitcher';
 
-// Agent color mapping
-const agentColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-  main: { 
-    bg: 'from-violet-500/20 to-purple-600/20', 
-    border: 'border-violet-500/50', 
-    text: 'text-violet-300',
-    glow: 'shadow-violet-500/20'
-  },
-  slack: { 
-    bg: 'from-emerald-500/20 to-green-600/20', 
-    border: 'border-emerald-500/50', 
-    text: 'text-emerald-300',
-    glow: 'shadow-emerald-500/20'
-  },
-  coding: { 
-    bg: 'from-amber-500/20 to-orange-600/20', 
-    border: 'border-amber-500/50', 
-    text: 'text-amber-300',
-    glow: 'shadow-amber-500/20'
-  },
-  default: { 
-    bg: 'from-slate-500/20 to-gray-600/20', 
-    border: 'border-slate-500/50', 
-    text: 'text-slate-300',
-    glow: 'shadow-slate-500/20'
-  },
+const agentAccents: Record<string, string> = {
+  main: 'border-violet-500/15',
+  slack: 'border-emerald-500/15',
+  coding: 'border-amber-500/15',
 };
 
-function getAgentColor(agentId: string) {
-  return agentColors[agentId] || agentColors.default;
-}
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
 
-// Icon components
-function BotIcon({ className = "w-6 h-6" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="8" width="18" height="12" rx="2" />
-      <circle cx="9" cy="14" r="2" />
-      <circle cx="15" cy="14" r="2" />
-      <path d="M12 2v6" />
-      <circle cx="12" cy="2" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function ChannelIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 9h16M4 15h16M10 3l-2 18M16 3l-2 18" />
-    </svg>
-  );
-}
-
-function LinkIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  );
-}
-
-function CpuIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" />
-      <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" />
-    </svg>
-  );
-}
-
-function UsersIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, duration: 0.4, bounce: 0 } },
+};
 
 export function AgentBindings() {
   const { agents, bindings, loading, error, isRefreshing, refetch } = useAgentsOverview();
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-700/50 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-64 bg-slate-800/50 rounded-xl"></div>
-            ))}
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="skeleton skeleton-heading w-36" />
+            <div className="skeleton skeleton-text w-44" />
           </div>
+          <div className="skeleton h-9 w-24 rounded-lg" />
+        </div>
+
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="skeleton-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="skeleton w-9 h-9 rounded-lg" />
+                <div className="space-y-1.5">
+                  <div className="skeleton skeleton-heading w-8" />
+                  <div className="skeleton skeleton-text w-20" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Agent cards skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton-card">
+              {/* Agent header */}
+              <div className="p-4 border-b border-zinc-800/40">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton w-9 h-9 rounded-lg" />
+                  <div className="space-y-1.5">
+                    <div className="skeleton skeleton-text w-20" />
+                    <div className="skeleton skeleton-text w-14" style={{ height: '0.5rem' }} />
+                  </div>
+                </div>
+              </div>
+              {/* Agent details */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="skeleton skeleton-circle w-3.5 h-3.5" />
+                  <div className="skeleton skeleton-text w-40" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="skeleton skeleton-circle w-3.5 h-3.5" />
+                  <div className="skeleton skeleton-text w-24" />
+                </div>
+                <div className="pt-3 border-t border-zinc-800/40 space-y-2">
+                  <div className="skeleton skeleton-text w-28" style={{ height: '0.5rem' }} />
+                  <div className="flex gap-1.5">
+                    <div className="skeleton h-6 w-16 rounded" />
+                    <div className="skeleton h-6 w-20 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -102,254 +99,164 @@ export function AgentBindings() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button 
-            onClick={refetch}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="card p-8 text-center">
+        <p className="text-red-400 mb-4">{error}</p>
+        <button onClick={refetch} className="btn btn-ghost">
+          <ArrowsClockwise className="w-4 h-4" /> Retry
+        </button>
       </div>
     );
   }
 
+  const stats = [
+    { label: 'Agents', value: agents.length, icon: Robot },
+    { label: 'Bindings', value: bindings.length, icon: Hash },
+    { label: 'Providers', value: agents.filter(a => a.model).map(a => a.model?.split('/')[0]).filter((v, i, a) => a.indexOf(v) === i).length, icon: Cpu },
+    { label: 'With Subagents', value: agents.filter(a => a.subagents?.allowAgents?.length).length, icon: Users },
+  ];
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            Agent Bindings
-          </h2>
-          <p className="text-slate-400 mt-1">
-            {agents.length} agents • {bindings.length} channel bindings
-          </p>
+          <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">Agent Bindings</h2>
+          <p className="text-sm text-zinc-500 mt-0.5">{agents.length} agents, {bindings.length} bindings</p>
         </div>
-        <button
-          onClick={refetch}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all text-slate-300 disabled:opacity-50"
-        >
-          <svg 
-            className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
-          >
-            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
-          </svg>
+        <button onClick={refetch} disabled={isRefreshing} className="btn btn-ghost">
+          <ArrowsClockwise className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-violet-500/20 rounded-lg">
-              <BotIcon className="w-5 h-5 text-violet-400" />
+      {/* Stats */}
+      <motion.div variants={listVariants} initial="hidden" animate="visible" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {stats.map((stat) => (
+          <motion.div key={stat.label} variants={itemVariants} className="card p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#FF4D00]/8 flex items-center justify-center">
+                <stat.icon className="w-4.5 h-4.5 text-[#FF4D00]" />
+              </div>
+              <div>
+                <p className="text-xl font-semibold text-zinc-100 tabular-nums">{stat.value}</p>
+                <p className="text-[11px] text-zinc-500">{stat.label}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{agents.length}</p>
-              <p className="text-xs text-slate-400">Total Agents</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-lg">
-              <ChannelIcon className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{bindings.length}</p>
-              <p className="text-xs text-slate-400">Bindings</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/20 rounded-lg">
-              <CpuIcon className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {agents.filter(a => a.model).map(a => a.model?.split('/')[0]).filter((v, i, a) => a.indexOf(v) === i).length}
-              </p>
-              <p className="text-xs text-slate-400">Providers</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/20 rounded-lg">
-              <UsersIcon className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {agents.filter(a => a.subagents?.allowAgents?.length).length}
-              </p>
-              <p className="text-xs text-slate-400">With Subagents</p>
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
-      {/* Agents Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {agents.map((agent) => {
-          const color = getAgentColor(agent.id);
-          return (
-            <div 
-              key={agent.id}
-              className={`
-                relative overflow-hidden rounded-xl border ${color.border}
-                bg-gradient-to-br ${color.bg} backdrop-blur-sm
-                shadow-lg ${color.glow}
-                transition-all duration-300 hover:scale-[1.02] hover:shadow-xl
-              `}
-            >
-              {/* Header */}
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-white/10`}>
-                    <BotIcon className={`w-6 h-6 ${color.text}`} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {agent.name || agent.id}
-                    </h3>
-                    <p className="text-sm text-slate-400">ID: {agent.id}</p>
-                  </div>
+      {/* Claude Code Provider Switcher */}
+      <ClaudeCodeSwitcher />
+
+      {/* Agent cards */}
+      <motion.div variants={listVariants} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+        {agents.map((agent) => (
+          <motion.div
+            key={agent.id}
+            variants={itemVariants}
+            className={`card ${agentAccents[agent.id] || ''} hover:border-[#FF4D00]/15 transition-colors`}
+          >
+            {/* Agent header */}
+            <div className="p-4 border-b border-zinc-800/40">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-zinc-800/60 flex items-center justify-center">
+                  <Robot className="w-4.5 h-4.5 text-zinc-400" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-zinc-200">{agent.name || agent.id}</h3>
+                  <p className="text-[11px] text-zinc-600">ID: {agent.id}</p>
                 </div>
               </div>
-
-              {/* Body */}
-              <div className="p-5 space-y-4">
-                {/* Model */}
-                {agent.model && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <CpuIcon className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-300">{agent.model}</span>
-                  </div>
-                )}
-
-                {/* Thinking Level */}
-                {agent.thinkingLevel && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-slate-400">💭</span>
-                    <span className="text-slate-300">Thinking: {agent.thinkingLevel}</span>
-                  </div>
-                )}
-
-                {/* Max Turns */}
-                {agent.maxTurns && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-slate-400">🔄</span>
-                    <span className="text-slate-300">Max Turns: {agent.maxTurns}</span>
-                  </div>
-                )}
-
-                {/* Subagents */}
-                {agent.subagents?.allowAgents && agent.subagents.allowAgents.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <UsersIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Allowed Subagents
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {agent.subagents.allowAgents.map((subId) => {
-                        const subColor = getAgentColor(subId);
-                        return (
-                          <span 
-                            key={subId}
-                            className={`px-2 py-1 rounded-md text-xs font-medium ${subColor.text} bg-white/10`}
-                          >
-                            {subId}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Bindings */}
-                {agent.bindings && agent.bindings.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <LinkIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                        Channel Bindings
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {agent.bindings.map((binding, idx) => (
-                        <div 
-                          key={idx}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 text-sm"
-                        >
-                          <ChannelIcon className="w-4 h-4 text-slate-400" />
-                          <span className="text-slate-300 font-mono text-xs">
-                            {binding.pattern || binding.channel}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
-          );
-        })}
-      </div>
 
-      {/* All Bindings Table */}
+            {/* Agent details */}
+            <div className="p-4 space-y-3">
+              {agent.model && (
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span className="text-zinc-400">{agent.model}</span>
+                </div>
+              )}
+              {agent.thinkingLevel && (
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <Brain className="w-3.5 h-3.5" />
+                  <span className="text-zinc-400">Thinking: {agent.thinkingLevel}</span>
+                </div>
+              )}
+              {agent.maxTurns && (
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <ArrowsCounterClockwise className="w-3.5 h-3.5" />
+                  <span className="text-zinc-400">Max Turns: {agent.maxTurns}</span>
+                </div>
+              )}
+
+              {/* Subagents */}
+              {agent.subagents?.allowAgents && agent.subagents.allowAgents.length > 0 && (
+                <div className="pt-3 border-t border-zinc-800/40">
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5">
+                    <Users className="w-3 h-3" /> Allowed Subagents
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {agent.subagents.allowAgents.map((subId) => (
+                      <span key={subId} className="px-2 py-0.5 rounded bg-zinc-800/60 text-[11px] text-zinc-400 border border-zinc-800">
+                        {subId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bindings */}
+              {agent.bindings && agent.bindings.length > 0 && (
+                <div className="pt-3 border-t border-zinc-800/40">
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5">
+                    <Link className="w-3 h-3" /> Channel Bindings
+                  </p>
+                  <div className="space-y-1">
+                    {agent.bindings.map((binding, idx) => (
+                      <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
+                        <Hash className="w-3 h-3 text-zinc-600" />
+                        <span className="text-zinc-400 font-mono text-[11px]">{binding.pattern || binding.channel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* All bindings table */}
       {bindings.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <LinkIcon className="w-5 h-5" />
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+            <Link className="w-4 h-4 text-zinc-500" />
             All Channel Bindings
           </h3>
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
-            <table className="w-full">
+          <div className="table-container">
+            <table className="table">
               <thead>
-                <tr className="border-b border-slate-700/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Channel / Pattern
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Agent
-                  </th>
+                <tr>
+                  <th>Channel / Pattern</th>
+                  <th>Agent</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/30">
-                {bindings.map((binding, idx) => {
-                  const color = getAgentColor(binding.agent);
-                  return (
-                    <tr key={idx} className="hover:bg-slate-700/20 transition-colors">
-                      <td className="px-6 py-4">
-                        <code className="text-sm text-slate-300 font-mono bg-slate-900/50 px-2 py-1 rounded">
-                          {binding.pattern || binding.channel}
-                        </code>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${color.bg} ${color.border} border`}>
-                          <BotIcon className={`w-4 h-4 ${color.text}`} />
-                          <span className={color.text}>{binding.agent}</span>
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+              <tbody>
+                {bindings.map((binding, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <code className="text-xs text-zinc-400 font-mono bg-zinc-800/40 px-2 py-0.5 rounded">{binding.pattern || binding.channel}</code>
+                    </td>
+                    <td>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800/40 border border-zinc-800 text-xs text-zinc-400">
+                        <Robot className="w-3 h-3" />
+                        {binding.agent}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -357,12 +264,10 @@ export function AgentBindings() {
       )}
 
       {agents.length === 0 && (
-        <div className="text-center py-12">
-          <BotIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">No agents configured</p>
-          <p className="text-sm text-slate-500 mt-2">
-            Add agents to your Clawdbot configuration to see them here
-          </p>
+        <div className="text-center py-16">
+          <Robot className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-400">No agents configured</p>
+          <p className="text-sm text-zinc-600 mt-1">Add agents to your configuration</p>
         </div>
       )}
     </div>

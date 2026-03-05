@@ -32,12 +32,22 @@ export interface CronJob {
   agentId?: string;
 }
 
+export interface ResourceMetrics {
+  cpuPercent: number;
+  memoryPercent: number;
+  memoryUsedMB: number;
+  memoryTotalMB: number;
+  loadAvg: number[];
+  cpuCores: number;
+}
+
 export interface SystemStatus {
   gateway: {
     running: boolean;
     pid?: number;
     uptime?: string;
   };
+  resources: ResourceMetrics;
 }
 
 export interface AgentBinding {
@@ -243,4 +253,131 @@ export function useAgentsOverview(autoRefresh = false) {
     isRefreshing,
     refetch 
   };
+}
+
+export interface SessionMessage {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+  timestamp?: number;
+}
+
+export function useSessionMessages(sessionKey: string | null) {
+  const [messages, setMessages] = useState<SessionMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionKey) {
+      setMessages([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    fetch(`${API_BASE}/sessions/messages/${encodeURIComponent(sessionKey)}`, {
+      signal: controller.signal,
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(json => {
+        setMessages(json.messages || []);
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+          setMessages([]);
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [sessionKey]);
+
+  return { messages, loading, error };
+}
+
+// --- Model management ---
+
+export interface ModelInfo {
+  key: string;
+  name: string;
+  input: string;
+  contextWindow: number;
+  local: boolean;
+  available: boolean;
+  tags: string[];
+}
+
+export interface ModelStatus {
+  defaultModel: string;
+  resolvedDefault: string;
+  fallbacks: string[];
+  aliases: Record<string, string>;
+  allowed: string[];
+}
+
+export function useModels() {
+  const { data, loading, error, refetch } = useApiData<{ models: ModelInfo[] }>(
+    '/models/list',
+    { models: [] },
+    false
+  );
+  return { models: data.models || [], loading, error, refetch };
+}
+
+export function useModelStatus() {
+  const { data, loading, error, refetch } = useApiData<ModelStatus | null>(
+    '/models/status',
+    null,
+    false
+  );
+  return { status: data, loading, error, refetch };
+}
+
+export interface SetModelResult {
+  success: boolean;
+  model?: string;
+  gatewayRestarted?: boolean;
+  gatewayError?: string;
+  error?: string;
+}
+
+// --- Claude Code Provider Switcher (ccps) ---
+
+export interface CcProvider {
+  id: string;
+  name: string;
+  isCurrent: boolean;
+  baseUrl: string;
+}
+
+export function useCcpsProviders() {
+  const { data, loading, error, refetch } = useApiData<{ providers: CcProvider[] }>(
+    '/agents/ccps/list',
+    { providers: [] },
+    false
+  );
+  return { providers: data.providers || [], loading, error, refetch };
+}
+
+export async function switchCcpsProvider(nameOrId: string): Promise<{ success: boolean; name?: string; error?: string }> {
+  const res = await fetch(`${API_BASE}/agents/ccps/use`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nameOrId }),
+  });
+  return res.json();
+}
+
+export async function setModelAndRestart(modelKey: string): Promise<SetModelResult> {
+  const res = await fetch(`${API_BASE}/models/set`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: modelKey }),
+  });
+  return res.json();
 }

@@ -1,11 +1,21 @@
+import { motion } from 'framer-motion';
 import { useSessions } from '../hooks/useOpenClawAPI';
+import { ModelSwitcher } from './ModelSwitcher';
+import {
+  ChatCircleDots,
+  Clock,
+  Cpu,
+  Coins,
+  ArrowsClockwise,
+  Timer,
+  CaretRight,
+} from '@phosphor-icons/react';
 
 function formatTimeAgo(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-
   if (days > 0) return `${days}d ago`;
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
@@ -19,71 +29,86 @@ function formatTokens(n?: number): string {
   return n.toString();
 }
 
-// Icon components
-function SessionIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
 
-function ClockIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v6l4 2" />
-    </svg>
-  );
-}
-
-function CpuIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" />
-      <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" />
-    </svg>
-  );
-}
-
-function TokenIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v12M6 12h12" />
-    </svg>
-  );
-}
-
-function CronIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v6l4 2" />
-      <path d="M16 16l2 2" />
-    </svg>
-  );
-}
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, duration: 0.4, bounce: 0 } },
+};
 
 export function Dashboard() {
   const { sessions, loading, error, isRefreshing, refetch } = useSessions();
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-700/50 rounded w-1/4"></div>
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-slate-800/50 rounded-xl"></div>
-            ))}
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="skeleton skeleton-heading w-40" />
+            <div className="skeleton skeleton-text w-52" />
           </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-slate-800/50 rounded-xl"></div>
-            ))}
+          <div className="skeleton h-9 w-24 rounded-lg" />
+        </div>
+
+        {/* Model switcher skeleton */}
+        <div className="skeleton-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="skeleton w-9 h-9 rounded-lg" />
+              <div className="space-y-1.5">
+                <div className="skeleton skeleton-text w-24" />
+                <div className="skeleton skeleton-text w-36" />
+              </div>
+            </div>
+            <div className="skeleton h-8 w-28 rounded-lg" />
           </div>
+        </div>
+
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="skeleton-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="skeleton w-9 h-9 rounded-lg" />
+                <div className="space-y-1.5">
+                  <div className="skeleton skeleton-heading w-12" />
+                  <div className="skeleton skeleton-text w-20" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Session list skeleton */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="skeleton skeleton-circle w-4 h-4" />
+            <div className="skeleton skeleton-text w-28" />
+          </div>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton-card p-4">
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="skeleton skeleton-text w-64" />
+                    <div className="skeleton h-5 w-14 rounded" />
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="skeleton skeleton-text w-20" />
+                    <div className="skeleton skeleton-text w-28" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="skeleton h-5 w-16 rounded" />
+                  <div className="skeleton skeleton-text w-12" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -91,226 +116,198 @@ export function Dashboard() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button 
-            onClick={refetch}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="card p-8 text-center">
+        <p className="text-red-400 mb-4">{error}</p>
+        <button onClick={refetch} className="btn btn-ghost">
+          <ArrowsClockwise className="w-4 h-4" />
+          Retry
+        </button>
       </div>
     );
   }
 
-  // Separate main and cron sessions
   const mainSessions = sessions.filter(s => !s.key.includes(':cron:'));
   const cronSessions = sessions.filter(s => s.key.includes(':cron:'));
-
-  // Calculate total tokens
   const totalInputTokens = sessions.reduce((acc, s) => acc + (s.inputTokens || 0), 0);
   const totalOutputTokens = sessions.reduce((acc, s) => acc + (s.outputTokens || 0), 0);
   const totalTokens = totalInputTokens + totalOutputTokens;
 
+  const stats = [
+    { label: 'Total Sessions', value: sessions.length, icon: ChatCircleDots },
+    { label: 'Main Sessions', value: mainSessions.length, icon: ChatCircleDots },
+    { label: 'Cron Sessions', value: cronSessions.length, icon: Timer },
+    { label: 'Total Tokens', value: formatTokens(totalTokens), icon: Coins },
+  ];
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            Active Sessions
-          </h2>
-          <p className="text-slate-400 mt-1">
-            Real-time session monitoring
-          </p>
+          <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">Active Sessions</h2>
+          <p className="text-sm text-zinc-500 mt-0.5">Real-time session monitoring</p>
         </div>
         <button
           onClick={refetch}
           disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all text-slate-300 disabled:opacity-50"
+          className="btn btn-ghost"
         >
-          <svg 
-            className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
-          >
-            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
-          </svg>
+          <ArrowsClockwise className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 rounded-xl p-4 border border-violet-500/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-violet-500/20 rounded-lg">
-              <SessionIcon className="w-5 h-5 text-violet-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{sessions.length}</p>
-              <p className="text-xs text-violet-300">Total Sessions</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 rounded-xl p-4 border border-emerald-500/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-lg">
-              <SessionIcon className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{mainSessions.length}</p>
-              <p className="text-xs text-emerald-300">Main Sessions</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-xl p-4 border border-amber-500/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/20 rounded-lg">
-              <CronIcon className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{cronSessions.length}</p>
-              <p className="text-xs text-amber-300">Cron Sessions</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl p-4 border border-cyan-500/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/20 rounded-lg">
-              <TokenIcon className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{formatTokens(totalTokens)}</p>
-              <p className="text-xs text-cyan-300">Total Tokens</p>
-            </div>
-          </div>
-        </div>
+      {/* Model Switcher */}
+      <div className="relative z-30">
+        <ModelSwitcher />
       </div>
+
+      {/* Stats — Bento Grid: 4 cols on md+, 2 on mobile */}
+      <motion.div
+        variants={listVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+      >
+        {stats.map((stat) => (
+          <motion.div
+            key={stat.label}
+            variants={itemVariants}
+            className="card p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#FF4D00]/8 flex items-center justify-center">
+                <stat.icon className="w-4.5 h-4.5 text-[#FF4D00]" />
+              </div>
+              <div>
+                <p className="text-xl font-semibold text-zinc-100 tabular-nums">{stat.value}</p>
+                <p className="text-[11px] text-zinc-500">{stat.label}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
       {/* Main Sessions */}
       {mainSessions.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <SessionIcon className="w-5 h-5 text-emerald-400" />
+        <section className="space-y-3">
+          <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+            <ChatCircleDots className="w-4 h-4 text-zinc-500" />
             Main Sessions
           </h3>
-          <div className="grid gap-4">
+          <motion.div
+            variants={listVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-2"
+          >
             {mainSessions.map((session) => (
-              <div 
-                key={session.key} 
-                className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-5 border border-slate-700/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
+              <motion.div
+                key={session.key}
+                variants={itemVariants}
+                className="card p-4 hover:border-[#FF4D00]/20 transition-colors group"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h4 className="font-semibold text-white">{session.key}</h4>
-                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-medium">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <h4 className="font-medium text-sm text-zinc-200 truncate">{session.key}</h4>
+                      <span className="shrink-0 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[11px] font-medium border border-emerald-500/15">
                         {session.kind}
                       </span>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
                       {session.model && (
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <CpuIcon className="w-4 h-4" />
-                          <span className="text-slate-300">{session.model}</span>
-                        </div>
+                        <span className="flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5" />
+                          <span className="text-zinc-400">{session.model}</span>
+                        </span>
                       )}
-                      
-                      {session.totalTokens && (
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <TokenIcon className="w-4 h-4" />
-                          <span className="text-slate-300">
-                            {formatTokens(session.totalTokens)} tokens
-                          </span>
-                          <span className="text-slate-500 text-xs">
+                      {session.totalTokens ? (
+                        <span className="flex items-center gap-1.5">
+                          <Coins className="w-3.5 h-3.5" />
+                          <span className="text-zinc-400 tabular-nums">{formatTokens(session.totalTokens)} tokens</span>
+                          <span className="text-zinc-600 tabular-nums">
                             (↓{formatTokens(session.inputTokens)} ↑{formatTokens(session.outputTokens)})
                           </span>
-                        </div>
-                      )}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg text-xs font-medium">
-                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/8 text-emerald-400 rounded text-[11px] font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot-active" />
                       Active
                     </span>
-                    <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-                      <ClockIcon className="w-3.5 h-3.5" />
+                    <span className="flex items-center gap-1 text-[11px] text-zinc-600">
+                      <Clock className="w-3 h-3" />
                       {formatTimeAgo(session.ageMs)}
-                    </div>
+                    </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </section>
       )}
 
       {/* Cron Sessions */}
       {cronSessions.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <CronIcon className="w-5 h-5 text-amber-400" />
+        <section className="space-y-3">
+          <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+            <Timer className="w-4 h-4 text-zinc-500" />
             Cron Job Sessions
-            <span className="text-sm font-normal text-slate-400">
-              ({cronSessions.length} active)
-            </span>
+            <span className="text-zinc-600">({cronSessions.length})</span>
           </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <motion.div
+            variants={listVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-2"
+          >
             {cronSessions.slice(0, 6).map((session) => (
-              <div 
-                key={session.key} 
-                className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/30 hover:border-amber-500/30 transition-all"
+              <motion.div
+                key={session.key}
+                variants={itemVariants}
+                className="card p-3.5 hover:border-[#FF4D00]/15 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm text-white truncate">
+                    <h4 className="font-medium text-sm text-zinc-300 truncate">
                       {session.key.split(':').pop()}
                     </h4>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
-                      <CpuIcon className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-zinc-500">
+                      <Cpu className="w-3 h-3" />
                       <span className="truncate">{session.model}</span>
                     </div>
-                    {session.totalTokens && (
-                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
-                        <TokenIcon className="w-3.5 h-3.5" />
-                        <span>{formatTokens(session.totalTokens)}</span>
+                    {session.totalTokens ? (
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-zinc-500">
+                        <Coins className="w-3 h-3" />
+                        <span className="tabular-nums">{formatTokens(session.totalTokens)}</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
-                  <span className="text-xs text-slate-500 whitespace-nowrap ml-2">
+                  <span className="text-[11px] text-zinc-600 whitespace-nowrap ml-2 tabular-nums">
                     {formatTimeAgo(session.ageMs)}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           {cronSessions.length > 6 && (
-            <p className="text-sm text-slate-500 text-center">
-              ... and {cronSessions.length - 6} more cron sessions
+            <p className="text-xs text-zinc-600 text-center flex items-center justify-center gap-1">
+              and {cronSessions.length - 6} more
+              <CaretRight className="w-3 h-3" />
             </p>
           )}
-        </div>
+        </section>
       )}
 
+      {/* Empty state */}
       {sessions.length === 0 && (
         <div className="text-center py-16">
-          <SessionIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 text-lg">No active sessions</p>
-          <p className="text-sm text-slate-500 mt-2">
-            Sessions will appear here when Clawdbot is in use
-          </p>
+          <ChatCircleDots className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-400">No active sessions</p>
+          <p className="text-sm text-zinc-600 mt-1">Sessions will appear here when Clawdbot is in use</p>
         </div>
       )}
     </div>

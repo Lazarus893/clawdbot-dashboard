@@ -7,7 +7,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors"
+      className="relative touch-target p-2 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors"
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <div className="relative w-4 h-4">

@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
 import { useSessions } from '../hooks/useOpenClawAPI';
 import { ModelSwitcher } from './ModelSwitcher';
+import { TasksCard } from './TasksCard';
+import { SkillsList } from './SkillsList';
+import { ProtectedNotes } from './ProtectedNotes';
 import {
   ChatCircleDots,
   Clock,
@@ -188,6 +191,13 @@ export function Dashboard() {
         ))}
       </motion.div>
 
+      {/* Tasks, Skills, Notes - 3 Column Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <TasksCard />
+        <SkillsList />
+        <ProtectedNotes />
+      </div>
+
       {/* Main Sessions */}
       {mainSessions.length > 0 && (
         <section className="space-y-3">
@@ -304,10 +314,14 @@ export function Dashboard() {
 
       {/* Empty state */}
       {sessions.length === 0 && (
-        <div className="text-center py-16">
-          <ChatCircleDots className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-400">No active sessions</p>
-          <p className="text-sm text-zinc-600 mt-1">Sessions will appear here when Clawdbot is in use</p>
+        <div className="card p-8 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+            <ChatCircleDots className="w-7 h-7 text-zinc-600" />
+          </div>
+          <p className="text-zinc-300 font-medium">No active sessions</p>
+          <p className="text-sm text-zinc-500 mt-1.5 max-w-sm mx-auto">
+            Sessions will appear here when Clawdbot is in use. Send a message via Telegram, Slack, or Discord to get started.
+          </p>
         </div>
       )}
     </div>

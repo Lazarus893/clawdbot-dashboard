@@ -26,7 +26,7 @@ export function NotificationCenter() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors"
+        className="relative touch-target p-2 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors"
       >
         <Bell className="w-4 h-4 text-zinc-500" />
         {unreadCount > 0 && (

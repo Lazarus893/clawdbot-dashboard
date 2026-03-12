@@ -70,6 +70,30 @@ button:focus-visible {
 }
 
 /* ========================================
+   FOCUS RINGS - Enhanced Accessibility
+   ======================================== */
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Interactive elements specific focus */
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ========================================
    FUNCTIONAL ANIMATIONS ONLY
    ======================================== */
 
@@ -203,6 +227,18 @@ button:focus-visible {
   border-color: var(--border-highlight);
 }
 
+/* Interactive card with hover lift effect */
+.card-lift {
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-lift:hover {
+  border-color: var(--border-highlight);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
 .card-elevated {
   background: var(--bg-elevated);
 }
@@ -227,6 +263,10 @@ button:focus-visible {
   cursor: pointer;
   border: none;
   transition: all 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn:active:not(:disabled) {
@@ -422,4 +462,13 @@ button:focus-visible {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Touch targets - minimum 44x44px for mobile accessibility */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

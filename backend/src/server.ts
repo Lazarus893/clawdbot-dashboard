@@ -7,6 +7,9 @@ import { cronRouter } from './routes/cron.js';
 import { systemRouter } from './routes/system.js';
 import { agentsRouter } from './routes/agents.js';
 import { modelsRouter } from './routes/models.js';
+import { todosRouter } from './routes/todos.js';
+import { skillsRouter } from './routes/skills.js';
+import { notesRouter } from './routes/notes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -86,6 +89,9 @@ app.use('/api/cron', cronRouter);
 app.use('/api/system', systemRouter);
 app.use('/api/agents', agentsRouter);
 app.use('/api/models', modelsRouter);
+app.use('/api/todos', todosRouter);
+app.use('/api/skills', skillsRouter);
+app.use('/api/notes', notesRouter);
 
 // Recent logs endpoint (initial batch for new connections)
 app.get('/api/logs/recent', (_req, res) => {

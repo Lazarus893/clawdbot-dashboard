@@ -1,15 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Dashboard } from './components/Dashboard';
-import { CronJobs } from './components/CronJobs';
-import { SystemStatus } from './components/SystemStatus';
-import { AgentBindings } from './components/AgentBindings';
-import { NotificationCenter } from './components/NotificationCenter';
-import { CommandPalette } from './components/CommandPalette';
-import { SessionDrawer } from './components/SessionDrawer';
-import { LogsPanel } from './components/LogsPanel';
-import { ThemeToggle } from './components/ThemeToggle';
 import { UIProvider, useUI } from './hooks/useUI';
+import { ThemeToggle } from './components/ThemeToggle';
+import { NotificationCenter } from './components/NotificationCenter';
 import {
   SquaresFour,
   Robot,
@@ -19,6 +12,45 @@ import {
   X,
   Command,
 } from '@phosphor-icons/react';
+
+// Lazy load page components for code-splitting
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const CronJobs = lazy(() => import('./components/CronJobs').then(m => ({ default: m.CronJobs })));
+const SystemStatus = lazy(() => import('./components/SystemStatus').then(m => ({ default: m.SystemStatus })));
+const AgentBindings = lazy(() => import('./components/AgentBindings').then(m => ({ default: m.AgentBindings })));
+
+// Lazy load overlays (loaded on demand)
+const CommandPalette = lazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const SessionDrawer = lazy(() => import('./components/SessionDrawer').then(m => ({ default: m.SessionDrawer })));
+const LogsPanel = lazy(() => import('./components/LogsPanel').then(m => ({ default: m.LogsPanel })));
+
+// Loading skeleton for pages
+function PageLoader() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="skeleton skeleton-heading w-40" />
+          <div className="skeleton skeleton-text w-52" />
+        </div>
+        <div className="skeleton h-9 w-24 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="skeleton-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="skeleton w-9 h-9 rounded-lg" />
+              <div className="space-y-1.5">
+                <div className="skeleton skeleton-heading w-12" />
+                <div className="skeleton skeleton-text w-20" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 type Tab = 'dashboard' | 'agents' | 'cron' | 'system';
 
@@ -70,7 +102,7 @@ function AppContent() {
               {/* Mobile menu */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                className="lg:hidden touch-target p-2 -ml-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5 text-zinc-400" /> : <List className="w-5 h-5 text-zinc-400" />}
               </button>
@@ -128,7 +160,7 @@ function AppContent() {
               <NotificationCenter />
               <button
                 onClick={() => setCommandPaletteOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
+                className="hidden md:flex touch-target items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
               >
                 <Command className="w-3.5 h-3.5" />
                 <span>K</span>
@@ -183,7 +215,7 @@ function AppContent() {
                 data-tab={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap
+                  touch-target flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap
                   transition-colors duration-150
                   ${isActive
                     ? 'bg-[#FF4D00]/10 text-[#FF4D00] border border-[#FF4D00]/20'
@@ -210,10 +242,12 @@ function AppContent() {
             exit="exit"
             className="py-6"
           >
-            {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'agents' && <AgentBindings />}
-            {activeTab === 'cron' && <CronJobs />}
-            {activeTab === 'system' && <SystemStatus />}
+            <Suspense fallback={<PageLoader />}>
+              {activeTab === 'dashboard' && <Dashboard />}
+              {activeTab === 'agents' && <AgentBindings />}
+              {activeTab === 'cron' && <CronJobs />}
+              {activeTab === 'system' && <SystemStatus />}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
@@ -242,9 +276,11 @@ function AppContent() {
       </footer>
 
       {/* Global overlays */}
-      <CommandPalette />
-      <SessionDrawer />
-      <LogsPanel />
+      <Suspense fallback={null}>
+        <CommandPalette />
+        <SessionDrawer />
+        <LogsPanel />
+      </Suspense>
     </div>
   );
 }
